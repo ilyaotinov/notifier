@@ -9,8 +9,8 @@ Create new notification with specified title. It will be sended to telegram afte
 
 ```json 
 {
-	title: string,
-	scheduled_at: datetime,
+	title: "string",
+	scheduled_at: "datetime"
 }
 ```
 
@@ -21,17 +21,30 @@ already sended notificatons. Otherwise list will contains only notifications whi
 {
 	notifications: [
 		{
-			title: string
-			scheduled_at: datetime,
-			sended_at: datetime,
-			created_at: datetime
+			title: "string"
+			scheduled_at: "datetime",
+			sended_at: "datetime",
+			created_at: "datetime"
 		},
 		...
 	]
 }
 ```
+### [POST] /user/reigser
+```json
+	{
+		login: "string",
+		password: "string"
+	}
+```
 
 ## Deamon sender
 This part of application is retrive from internal storage notifications where sended_at field is NULL and sends it to
 telegram, if scheduled_at <= now(). After that it updated sended_at filed to now().
+
+## Registraion
+For connect between cli app with reminders, telegram and specific user, there is a flow of registration:
+1. User from cli sends [POST] /user/register request.
+2. User from telegram bot, using /start command, specifies login from first step, and connect self telegram chat to notifier.
+3. After that, user can recieve notifications.
 
