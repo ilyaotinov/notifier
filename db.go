@@ -6,15 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 )
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS notification (
-    notification_id INTEGER PRIMARY KEY ASC,
+    notification_id CHAR(36) PRIMARY KEY NOT NULL,
     title TEXT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sended_at DATETIME NULL DEFAULT NULL
 );`,
+	`ALTER TABLE notification ADD COLUMN scheduled_at DATETIME NOT NULL;`,
 }
 
 func CreateSchema(ctx context.Context, db *sql.DB) error {
@@ -84,6 +86,23 @@ func CreateSchema(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func SaveUser(ctx context.Context, tx *sql.Tx, login string, hashedPassword string) error {
-	return nil
+var NotificationAlreadyExistsErr = errors.New("notification already exists")
+
+func SaveNotification(ctx context.Context, tx *sql.Tx, notification Notification) error {
+	row := tx.QueryRowContext(ctx, "SELECT notification_id FROM notification WHERE notification_id = ?", notification.UUID)
+	var uuid string
+	err := row.Scan(&uuid)
+
+	if err == nil {
+		return NotificationAlreadyExistsErr
+	}
+
+	if !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, "INSERT INTO notification (notification_id, title, scheduled_at) VALUES (?, ?, ?)",
+		notification.UUID, notification.Title, notification.ScheduledAt.Format(time.DateTime))
+
+	return err
 }

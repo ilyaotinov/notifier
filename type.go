@@ -1,10 +1,15 @@
 package main
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
-type User struct {
-	ID           int
-	Login        string
-	PasswordHash string
-	CreatedAt    time.Time
+type NullTime sql.NullTime
+
+type Notification struct {
+	UUID        string
+	Title       string
+	ScheduledAt time.Time
+	SendedAt    NullTime
 }
