@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -45,6 +47,7 @@ func initConfig() (Config, error) {
 
 func main() {
 	conf, err := initConfig()
+
 	if err != nil {
 		panic(err)
 	}
@@ -57,6 +60,7 @@ func main() {
 	h := newHandler(db, conf)
 	registerRoutes(h)
 
+	slog.Info("running http server", "host:port", ":8090")
 	err = http.ListenAndServe(":8090", nil) // TODO: move parameter to config
 	if err != nil {
 		panic(err)
@@ -78,7 +82,10 @@ func openAppDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	// TODO: run migrations
+	err = CreateSchema(context.TODO(), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create database schema: %w", err)
+	}
 
 	return db, nil
 }
